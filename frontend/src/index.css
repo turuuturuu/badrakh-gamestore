@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================================
+ * Theme tokens (day/night toggle in Navbar, ThemeContext)
+ * ---------------------------------------------------------------------
+ * `base` (surfaces/borders) and `ink` (adaptive text) are wired up in
+ * tailwind.config.js as `rgb(var(--x) / <alpha-value>)`, so every
+ * opacity variant (bg-base-700/60, etc.) inherits the theme for free —
+ * redefining the variables here is the ONLY theming needed for them.
+ * `--tw-` values are plain "R G B" triplets (no `rgb()` wrapper).
+ * ===================================================================== */
+:root {
+  color-scheme: dark;
+  --color-base-950: 5 7 13;     /* page background (near-black navy) */
+  --color-base-900: 10 14 23;
+  --color-base-800: 15 20 32;
+  --color-base-700: 21 27 42;   /* card surface */
+  --color-base-600: 28 36 54;   /* card surface, hover / raised */
+  --color-base-500: 42 51 72;   /* borders / dividers */
+  --color-ink: 255 255 255;     /* adaptive text: white on dark */
+  --site-bg-image: none;        /* set by SiteSettingsContext when an admin background image exists */
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --color-base-950: 243 244 249;
+  --color-base-900: 236 238 245;
+  --color-base-800: 255 255 255;
+  --color-base-700: 255 255 255;
+  --color-base-600: 238 240 247;
+  --color-base-500: 219 223 236;
+  --color-ink: 20 21 31;        /* adaptive text: near-black on light */
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-base-950 text-gray-100 antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    /* Ambient page-wide glow — two soft indigo/blue radial pools pinned
+       near the top of the viewport, fading into the near-black page
+       background (base-950) rather than sitting on top of it as a hard
+       shape. `background-attachment: fixed` keeps the light source
+       anchored to the viewport (not the document), so it reads as
+       ambient studio lighting behind the whole page instead of a shape
+       that scrolls away with the hero. Radial gradients (not a blurred
+       div) because blurring something this large is expensive and a
+       soft-edged gradient already dissolves naturally. Dark theme only —
+       see the light-theme override below. */
+    background-image:
+      radial-gradient(55% 45% at 50% 0%, rgba(124, 92, 255, 0.18), transparent 70%),
+      radial-gradient(40% 32% at 88% 6%, rgba(59, 130, 246, 0.14), transparent 70%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  /* Slim, dark-friendly scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: #2a3348;
+    border-radius: 999px;
+    transition: background 0.3s ease-in-out;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: #3b4664; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Scroll-triggered fade-up, driven by hooks/useReveal.js +
+     components/common/Reveal.jsx (IntersectionObserver toggles
+     .reveal-visible once when a section enters the viewport). */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =====================================================================
+ * Light theme, part 2 (day/night toggle in Navbar, ThemeContext)
+ * ---------------------------------------------------------------------
+ * Surfaces/borders (`base-*`) and adaptive text (`ink`) are handled by
+ * the CSS variables at the top of this file — no per-class override
+ * needed for those anymore. What's left is Tailwind's default gray
+ * scale, which the app uses directly (not `ink`) for muted/secondary
+ * text, so it gets the same "flip the handful of classes actually used"
+ * treatment. Text that must always stay white regardless of theme
+ * (gradient buttons, badges, image overlays) uses literal `text-white`
+ * in its component and is intentionally NOT touched here.
+ * ===================================================================== */
+[data-theme='light'] body {
+  /* The ambient glow is a dark-theme device (colored light dissolving
+     into near-black) — on a light page it would just read as a stain,
+     so it's off entirely in light mode. */
+  background-image: none;
+}
+
+[data-theme='light'] .text-gray-100,
+[data-theme='light'] .text-gray-200,
+[data-theme='light'] .text-gray-300 {
+  color: #33364a !important;
+}
+[data-theme='light'] .text-gray-400,
+[data-theme='light'] .text-gray-500 {
+  color: #6c6f85 !important;
+}
+[data-theme='light'] .placeholder-gray-500::placeholder {
+  color: #9599ad !important;
+}
+
+[data-theme='light'] .shadow-card {
+  box-shadow: 0 4px 20px 0 rgba(20, 20, 60, 0.1) !important;
+}
+[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: #d7dae6;
+}
+
+/* =====================================================================
+ * Admin-managed site background image (Admin Panel → Settings)
+ * ---------------------------------------------------------------------
+ * Overrides BOTH the dark-theme ambient glow and the light-theme "no
+ * glow" rule above, in either theme — it sits later in the cascade at
+ * the same specificity (html.has-bg-image body vs [data-theme] body:
+ * one class/attribute selector + the body element each), so source
+ * order decides, and this is last. SiteSettingsContext toggles
+ * `.has-bg-image` on <html> and sets --site-bg-image whenever an admin
+ * image exists; removing the image clears both, which falls straight
+ * back to the rules above with no extra branching needed here.
+ * ===================================================================== */
+html.has-bg-image body {
+  background-image:
+    linear-gradient(rgba(5, 7, 13, 0.55), rgba(5, 7, 13, 0.75)),
+    var(--site-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
