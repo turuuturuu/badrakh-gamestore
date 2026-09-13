@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, ArrowLeftRight, Share2, User, MessageCircle } from 'lucide-react';
+import { X, Heart, ArrowLeftRight, Share2, User, MessageCircle, Copy } from 'lucide-react';
 import GradientButton from '../common/GradientButton';
 import { formatMNT, CATEGORY_LABELS, STATTRAK_LABELS, STATTRAK_STYLES, formatFloat } from '../../utils/format';
 import { useFavorites } from '../../context/FavoritesContext';
@@ -72,6 +72,28 @@ export default function ProductModal({ product, onClose }) {
     }
     return `${OFFICIAL_MESSENGER_URL}?text=${encodeURIComponent(text)}`;
   })();
+
+  // A manual fallback for the Messenger auto-prefill above — that only
+  // fires reliably when Messenger opens a brand-new conversation; if the
+  // app was already open on the same thread, it just resumes as-is with
+  // no way for us to inject text into an already-open composer. Showing
+  // the ID (copyable) plus a reminder near the buy button means the
+  // buyer can still paste it in manually when the auto-fill doesn't land.
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(String(product.id));
+      show('ID хуулагдлаа');
+    } catch {
+      // clipboard permission denied or unsupported — nothing to do
+    }
+  };
+
+  const buyReminder =
+    product.category === 'topup'
+      ? `Худалдаж авах дээр дарж админтай чатлахдаа хүссэн цэнэглэх хэмжээгээ (жишээ: 660 UC) болон энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`
+      : product.category === 'rental'
+      ? `Худалдаж авах дээр дарж админтай чатлахдаа хүссэн түрээсийн хугацаагаа болон энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`
+      : `Худалдаж авах дээр дарж админтай чатлахдаа энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`;
 
   const handleShare = async () => {
     const url = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
@@ -231,6 +253,18 @@ export default function ProductModal({ product, onClose }) {
           </div>
 
           <h2 className="mt-1 text-xl font-extrabold text-ink">{product.title}</h2>
+
+          <motion.button
+            onClick={handleCopyId}
+            whileHover={{ borderColor: '#3b82f6' }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ duration: 0.2, ease: EASE_SMOOTH }}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-base-500 px-2.5 py-1 text-xs font-semibold text-gray-300 transition-colors duration-300 ease-smooth hover:text-ink"
+          >
+            ID: #{product.id}
+            <Copy className="h-3 w-3" strokeWidth={2} />
+          </motion.button>
+
           <p className="mt-2 text-3xl font-extrabold text-gradient">{formatMNT(displayPrice)}</p>
 
           {product.stattrak_type && product.stattrak_type !== 'none' && (
@@ -393,6 +427,7 @@ export default function ProductModal({ product, onClose }) {
           </div>
 
           <div className="sticky bottom-0 mt-6 space-y-2 bg-base-800 pb-1 pt-2">
+            <p className="text-center text-[11px] leading-relaxed text-gray-500">{buyReminder}</p>
             <GradientButton
               as="a"
               href={messengerUrl}
