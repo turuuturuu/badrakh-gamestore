@@ -9,4 +9,4 @@ export const FACEBOOK_PAGE_URL =
 // which product/seller it is. ProductModal appends a `?text=` param with
 // an auto-filled message built from that specific product, so the buyer
 // lands in Messenger with the composer already written for them.
-export const OFFICIAL_MESSENGER_URL = import.meta.env.VITE_MESSENGER_URL || 'https://m.me/enhm.nh.b.128561';
+export const OFFICIAL_MESSENGER_URL = import.meta.env.VITE_MESSENGER_URL || 'https://m.me/100071548254555';

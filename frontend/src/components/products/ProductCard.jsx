@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Flame, Heart } from 'lucide-react';
 import Badge from '../common/Badge';
-import { formatMNT, GAME_LABELS, WEAR_SHORT_LABELS, STATTRAK_LABELS, STATTRAK_STYLES, formatFloat } from '../../utils/format';
+import { formatMNT, WEAR_SHORT_LABELS, STATTRAK_LABELS, STATTRAK_STYLES, formatFloat } from '../../utils/format';
 import { useFavorites } from '../../context/FavoritesContext';
 import { useToast } from '../../context/ToastContext';
 import { EASE_SMOOTH } from '../../utils/motion';
@@ -17,6 +17,12 @@ const GAME_HOVER_ACCENT = {
   cs2: 'hover:shadow-glow-lg hover:ring-amber-400/50',
 };
 const DEFAULT_HOVER_ACCENT = 'hover:shadow-glow-lg hover:ring-brand-to/50';
+
+// Short form used only for the card's corner badge — "PUBG Mobile" at the
+// shared badge size collides with the HOT badge on a narrow 2-per-row
+// mobile card (~170px wide); everywhere else (title, modal) still shows
+// the full game name.
+const GAME_BADGE_LABELS = { pubg: 'PUBG', mlbb: 'MLBB', cs2: 'CS2' };
 
 /**
  * One catalog tile. Shows the cover image, HOT/game badges, a title,
@@ -66,16 +72,18 @@ export default function ProductCard({ product, onOpen, index = 0 }) {
           className="h-full w-full object-cover transition-transform duration-300 ease-smooth group-hover:scale-105"
         />
 
-        <div className="absolute left-2 top-2 flex gap-1.5">
-          {product.is_hot && (
-            <Badge variant="hot">
-              <Flame className="h-3 w-3" strokeWidth={2.2} fill="currentColor" />
+        <div className="absolute inset-x-2 top-2 flex items-start justify-between gap-1">
+          {product.is_hot ? (
+            <Badge variant="hot" className="shrink-0">
+              <Flame className="h-2.5 w-2.5" strokeWidth={2.2} fill="currentColor" />
               HOT
             </Badge>
+          ) : (
+            <span />
           )}
-        </div>
-        <div className="absolute right-2 top-2">
-          <Badge variant="game">{GAME_LABELS[product.game_slug] || product.game_slug}</Badge>
+          <Badge variant="game" className="shrink-0">
+            {GAME_BADGE_LABELS[product.game_slug] || product.game_slug}
+          </Badge>
         </div>
 
         <motion.button
@@ -127,15 +135,10 @@ export default function ProductCard({ product, onOpen, index = 0 }) {
             )}
           </div>
         )}
-        <div className="flex items-center justify-between pt-1">
+        <div className="pt-1">
           <span className="text-base font-extrabold text-gradient">
             {hasVariants ? `${formatMNT(product.variants[0].price)}-с` : formatMNT(product.price)}
           </span>
-          {product.seller_type === 'user' && (
-            <span className="rounded-md bg-base-600 px-1.5 py-0.5 text-[10px] font-medium text-gray-400">
-              Хэрэглэгч
-            </span>
-          )}
         </div>
 
         <motion.button

@@ -3,8 +3,17 @@
 // never creates its own `new Pool()`.
 const { Pool } = require('pg');
 
+// Managed Postgres providers (Render, Railway, RDS, ...) require SSL on
+// any connection that isn't over their own private network — a local
+// "postgres://...@localhost/..." never needs it, so key off the host
+// instead of NODE_ENV (this also lets a one-off script on a dev machine
+// point DATABASE_URL at the production database, e.g. to run a
+// migration, without a separate SSL-only config path).
+const isLocalDb = /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URL || '');
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: isLocalDb ? false : { rejectUnauthorized: false },
   // small, sane defaults; tune via env vars if the deployment needs more
   max: Number(process.env.PG_POOL_MAX || 10),
   idleTimeoutMillis: 30000,

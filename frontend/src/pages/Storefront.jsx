@@ -145,17 +145,16 @@ export default function Storefront() {
           <h1 className="mt-3 text-xl font-extrabold leading-tight text-ink sm:text-3xl">
             Тоглоомын <span className="text-gradient">аккаунт, түрээс, цэнэглэлт</span>
           </h1>
+          {/* Admin names registered in Admin Panel → Settings, right
+              under the heading. Renders nothing on its own when no admin
+              profile exists yet. */}
+          <AdminStrip />
           <TrustMarquee />
         </div>
       </Reveal>
 
-      {/* Admin names registered in Admin Panel → Settings, shown as a
-          static row above the search bar. Renders nothing on its own
-          when no admin profile exists yet. */}
-      <AdminStrip />
-
       {/* ---- Search + filters ---- */}
-      <Reveal delay={80} className="mt-3">
+      <Reveal delay={80} className="mt-4">
         <SearchBar
           query={query}
           onQueryChange={setQuery}

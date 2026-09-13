@@ -33,7 +33,8 @@ export default function ProductsTable({ products, onEdit, onDelete, onToggleStat
 
   const Row = ({ p }) => (
     <>
-      <td className={`${cellClass} pl-4`}>
+      <td className={`${cellClass} pl-4 font-mono text-xs text-gray-500`}>#{p.id}</td>
+      <td className={cellClass}>
         <div className="flex items-center gap-3">
           <img
             src={p.images?.[0]?.url}
@@ -86,16 +87,18 @@ export default function ProductsTable({ products, onEdit, onDelete, onToggleStat
       <div className="hidden overflow-hidden rounded-2xl border border-base-600 bg-base-700 sm:block">
         <table className="w-full table-fixed text-left">
           <colgroup>
-            <col className="w-[26%]" />
-            <col className="w-[11%]" />
+            <col className="w-[7%]" />
+            <col className="w-[21%]" />
+            <col className="w-[10%]" />
+            <col className="w-[9%]" />
             <col className="w-[10%]" />
             <col className="w-[11%]" />
-            <col className="w-[12%]" />
-            <col className="w-[30%]" />
+            <col className="w-[32%]" />
           </colgroup>
           <thead>
             <tr className="border-b border-base-600 text-xs uppercase tracking-wide text-gray-500">
-              <th className="py-3 pl-4 pr-4 font-medium">Бараа</th>
+              <th className="py-3 pl-4 pr-4 font-medium">ID</th>
+              <th className="py-3 pr-4 font-medium">Бараа</th>
               <th className="py-3 pr-4 font-medium">Ангилал</th>
               <th className="py-3 pr-4 font-medium">Seller</th>
               <th className="py-3 pr-4 font-medium">Үнэ</th>
@@ -120,7 +123,10 @@ export default function ProductsTable({ products, onEdit, onDelete, onToggleStat
             <div className="flex items-center gap-3">
               <img src={p.images?.[0]?.url} alt="" className="h-12 w-12 shrink-0 rounded-lg bg-base-800 object-cover" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-white">{p.title}</p>
+                <p className="truncate text-sm font-semibold text-white">
+                  <span className="mr-1.5 font-mono text-xs font-normal text-gray-500">#{p.id}</span>
+                  {p.title}
+                </p>
                 <p className="text-xs text-gray-500">
                   {p.game_name} · {CATEGORY_LABELS[p.category]}
                 </p>

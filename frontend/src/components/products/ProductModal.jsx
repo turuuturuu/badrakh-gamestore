@@ -65,10 +65,10 @@ export default function ProductModal({ product, onClose }) {
     let text;
     if (product.category === 'topup') {
       const amount = selectedVariant?.label || formatMNT(displayPrice);
-      text = `Сайн байна уу? Би ${amount}-ийн цэнэглэлт хийлгэмээр байна.`;
+      text = `Сайн байна уу? Би ${amount}-ийн цэнэглэлт хийлгэмээр байна. (Бараа ID: #${product.id})`;
     } else {
       const verb = product.category === 'rental' ? 'түрээслэмээр' : 'худалдаж авмаар';
-      text = `Сайн байна уу? Би ${product.title} (Үнэ: ${formatMNT(displayPrice)})-ийг ${verb} байна.`;
+      text = `Сайн байна уу? Би ${product.title} (ID: #${product.id}, Үнэ: ${formatMNT(displayPrice)})-ийг ${verb} байна.`;
     }
     return `${OFFICIAL_MESSENGER_URL}?text=${encodeURIComponent(text)}`;
   })();

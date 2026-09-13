@@ -20,11 +20,23 @@ export default function AdminProducts() {
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [filter, setFilter] = useState(undefined); // undefined = "Бүгд"
+  const [search, setSearch] = useState('');
 
-  const filteredProducts = useMemo(
-    () => products.filter((p) => matchesAdminFilter(p, filter)),
-    [products, filter]
-  );
+  // Matches on ID (with or without a leading "#"), title, or the
+  // created-at date (YYYY-MM-DD) — enough to find a listing from just
+  // the "#<id>" a buyer's Messenger message includes, or from its name
+  // or the day it was added.
+  const filteredProducts = useMemo(() => {
+    const q = search.trim().toLowerCase().replace(/^#/, '');
+    return products.filter((p) => {
+      if (!matchesAdminFilter(p, filter)) return false;
+      if (!q) return true;
+      const idMatch = String(p.id).includes(q);
+      const titleMatch = p.title?.toLowerCase().includes(q);
+      const dateMatch = p.created_at && new Date(p.created_at).toLocaleDateString('sv-SE').includes(q);
+      return idMatch || titleMatch || dateMatch;
+    });
+  }, [products, filter, search]);
 
   const load = () => {
     setLoading(true);
@@ -95,9 +107,18 @@ export default function AdminProducts() {
           <GradientButton onClick={openAdd}>+ Бараа нэмэх</GradientButton>
         </div>
 
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <AdminFilterTabs value={filter} onChange={setFilter} />
-          <p className="text-xs text-gray-500">Нийт {filteredProducts.length} бараа</p>
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ID, нэр, огноогоор хайх..."
+              className="w-full rounded-xl border border-base-500 bg-base-800 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-brand-to sm:w-60"
+            />
+            <p className="shrink-0 text-xs text-gray-500">Нийт {filteredProducts.length} бараа</p>
+          </div>
         </div>
 
         {loading && <Loader />}

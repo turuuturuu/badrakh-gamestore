@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
-import { UserRound } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import settingsService from '../../api/settingsService';
 
-// Sits above the search bar, right under the hero heading: a static,
-// centered row of pill chips for the admin names registered in
-// Admin Panel → Settings — no other text, no scrolling. Renders nothing
+// Sits inside the hero, right under the heading — a small "Админтай шууд
+// холбогдох" label plus a centered row of chat chips for the admins
+// registered in Admin Panel → Settings. The chat-bubble icon + label make
+// it obvious at a glance that tapping a chip opens a direct chat with
+// that admin, rather than reading as a plain name tag. Renders nothing
 // until at least one admin profile exists, so there's never an empty row.
 function AdminChip({ name, profileUrl }) {
   return (
@@ -14,13 +16,31 @@ function AdminChip({ name, profileUrl }) {
       target="_blank"
       rel="noreferrer"
       whileHover={{ y: -1, borderColor: '#3b82f6' }}
-      whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className="inline-flex items-center gap-1.5 rounded-full border border-base-500 px-3.5 py-1.5 text-xs font-semibold text-gray-300 transition-colors duration-300 ease-smooth hover:text-ink sm:text-sm"
+      // A springy, tactile press: scales down further than a typical
+      // hover-lift button and flashes brand-blue (border + tint + glow)
+      // for an instant so tapping genuinely feels "pressed" rather than
+      // just a flat opacity change.
+      whileTap={{
+        scale: 0.9,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        boxShadow: '0 0 20px 2px rgba(59, 130, 246, 0.45)',
+        transition: { type: 'spring', stiffness: 500, damping: 18 },
+      }}
+      className="inline-flex items-center gap-1.5 rounded-full border border-base-500 bg-base-950/40 px-3.5 py-1.5 text-xs font-semibold text-gray-200 backdrop-blur-sm transition-colors duration-300 ease-smooth hover:text-ink sm:text-sm"
     >
-      <span className="flex text-brand-to">
-        <UserRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
-      </span>
+      <motion.span
+        aria-hidden
+        className="relative flex text-brand-to"
+        whileTap={{ scale: 1.2, rotate: -8 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+      >
+        <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
+        {/* Messenger-style "online" dot — signals this admin is reachable
+            right now, not just a static contact link. */}
+        <span className="absolute -right-px -top-px h-1.5 w-1.5 rounded-full bg-accent-green ring-2 ring-base-950" />
+      </motion.span>
       {name}
     </motion.a>
   );
@@ -39,10 +59,13 @@ export default function AdminStrip() {
   if (!admins.length) return null;
 
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-      {admins.map((admin) => (
-        <AdminChip key={admin.id} name={admin.name} profileUrl={admin.profile_url} />
-      ))}
+    <div className="mt-4 flex flex-col items-center gap-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Админтай шууд холбогдох</p>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        {admins.map((admin) => (
+          <AdminChip key={admin.id} name={admin.name} profileUrl={admin.profile_url} />
+        ))}
+      </div>
     </div>
   );
 }
