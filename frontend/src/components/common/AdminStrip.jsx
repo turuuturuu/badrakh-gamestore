@@ -4,35 +4,36 @@ import { useEffect, useState } from 'react';
 import settingsService from '../../api/settingsService';
 
 // Sits inside the hero, right under the heading — a small "Админтай шууд
-// холбогдох" label plus a centered row of chat chips for the admins
-// registered in Admin Panel → Settings. The chat-bubble icon + label make
-// it obvious at a glance that tapping a chip opens a direct chat with
-// that admin, rather than reading as a plain name tag. Renders nothing
-// until at least one admin profile exists, so there's never an empty row.
+// холбогдох" label plus a vertically auto-scrolling list of chat chips for
+// the admins registered in Admin Panel → Settings. The chat-bubble icon +
+// label make it obvious at a glance that tapping a row opens a direct
+// chat with that admin, rather than reading as a plain name tag. Renders
+// nothing until at least one admin profile exists, so there's never an
+// empty row.
 function AdminChip({ name, profileUrl }) {
   return (
     <motion.a
       href={profileUrl}
       target="_blank"
       rel="noreferrer"
-      whileHover={{ y: -1, borderColor: '#3b82f6' }}
+      whileHover={{ x: 2, borderColor: '#3b82f6' }}
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
       // A springy, tactile press: scales down further than a typical
       // hover-lift button and flashes brand-blue (border + tint + glow)
       // for an instant so tapping genuinely feels "pressed" rather than
       // just a flat opacity change.
       whileTap={{
-        scale: 0.9,
+        scale: 0.96,
         borderColor: '#3b82f6',
         backgroundColor: 'rgba(59, 130, 246, 0.2)',
         boxShadow: '0 0 20px 2px rgba(59, 130, 246, 0.45)',
         transition: { type: 'spring', stiffness: 500, damping: 18 },
       }}
-      className="inline-flex items-center gap-1.5 rounded-full border border-base-500 bg-base-950/40 px-3.5 py-1.5 text-xs font-semibold text-gray-200 backdrop-blur-sm transition-colors duration-300 ease-smooth hover:text-ink sm:text-sm"
+      className="flex w-full shrink-0 items-center gap-1.5 rounded-full border border-base-500 bg-base-950/40 px-3.5 py-1.5 text-xs font-semibold text-gray-200 backdrop-blur-sm transition-colors duration-300 ease-smooth hover:text-ink sm:text-sm"
     >
       <motion.span
         aria-hidden
-        className="relative flex text-brand-to"
+        className="relative flex shrink-0 text-brand-to"
         whileTap={{ scale: 1.2, rotate: -8 }}
         transition={{ type: 'spring', stiffness: 500, damping: 15 }}
       >
@@ -41,7 +42,7 @@ function AdminChip({ name, profileUrl }) {
             right now, not just a static contact link. */}
         <span className="absolute -right-px -top-px h-1.5 w-1.5 rounded-full bg-accent-green ring-2 ring-base-950" />
       </motion.span>
-      {name}
+      <span className="truncate">{name}</span>
     </motion.a>
   );
 }
@@ -58,13 +59,29 @@ export default function AdminStrip() {
 
   if (!admins.length) return null;
 
+  // The track holds the list twice, stacked vertically, so translating it
+  // by exactly half its own height lines the second copy up perfectly
+  // where the first one started — an infinite downward cascade with no
+  // visible seam or reset. A single admin still loops fine (it just
+  // scrolls past itself).
+  const track = [...admins, ...admins];
+
   return (
     <div className="mt-4 flex flex-col items-center gap-2">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Админтай шууд холбогдох</p>
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {admins.map((admin) => (
-          <AdminChip key={admin.id} name={admin.name} profileUrl={admin.profile_url} />
-        ))}
+      {/* Fixed-height "window" so the list scrolls in place instead of
+          growing the hero's height with 4-5 names; the mask fades rows
+          in/out at the top and bottom edge instead of clipping them. */}
+      <div className="h-28 w-full max-w-[15rem] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_20%,black_80%,transparent)] sm:h-32 sm:max-w-xs">
+        <motion.div
+          animate={{ y: ['-50%', '0%'] }}
+          transition={{ duration: Math.max(admins.length, 1) * 3, ease: 'linear', repeat: Infinity }}
+          className="flex flex-col items-stretch gap-2"
+        >
+          {track.map((admin, i) => (
+            <AdminChip key={`${admin.id}-${i}`} name={admin.name} profileUrl={admin.profile_url} />
+          ))}
+        </motion.div>
       </div>
     </div>
   );

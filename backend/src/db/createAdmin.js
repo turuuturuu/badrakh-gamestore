@@ -1,16 +1,4 @@
-// Creates (or resets the password of) an admin account, using the
-// project's own bcryptjs dependency to hash the password correctly —
-// this replaces the old approach of embedding a pre-computed hash
-// literal in schema.sql, which is impossible to eyeball-verify and
-// easy to get wrong.
-//
-// Usage:
-//   node src/db/createAdmin.js [username] [password]
-//   npm run create-admin -- myAdminName aStrongerPassword
-//
-// With no arguments it upserts username "admin" / password "admin123"
-// (the same default the README documents) — change the password
-// immediately after first login in a real deployment.
+
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const { query, pool } = require('../config/db');

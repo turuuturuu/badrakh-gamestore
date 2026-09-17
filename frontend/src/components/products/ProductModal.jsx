@@ -13,13 +13,15 @@ const PLACEHOLDER = 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w
 
 /**
  * Full-screen-on-mobile / centered-on-desktop product detail dialog.
- * Buyers never create an account. The bottom "Худалдаж авах" button always
- * opens the store's own Messenger chat (OFFICIAL_MESSENGER_URL) regardless
- * of product; the top "Эзэнтэй холбогдох" button — shown only when the
- * admin set one for this listing — opens the seller's own profile link
- * (product.contact_messenger). Mount/unmount is animated by the parent
- * wrapping this component in <AnimatePresence> (see Storefront.jsx) —
- * the exit variants below only run because of that wrapper.
+ * Buyers never create an account. The bottom "Худалдаж авах" button routes
+ * conditionally by product.seller_type: 'admin' listings open the store's
+ * own Messenger chat (OFFICIAL_MESSENGER_URL); 'user' listings open that
+ * seller's own profile link (product.contact_messenger) directly instead.
+ * The top "Эзэнтэй холбогдох" button — shown only when the admin set one
+ * for this listing — mirrors that same seller link. Mount/unmount is
+ * animated by the parent wrapping this component in <AnimatePresence>
+ * (see Storefront.jsx) — the exit variants below only run because of that
+ * wrapper.
  */
 export default function ProductModal({ product, onClose }) {
   const [imgIndex, setImgIndex] = useState(0);
@@ -61,7 +63,15 @@ export default function ProductModal({ product, onClose }) {
   // from this exact product/variant, via m.me's `?text=` param — the
   // buyer lands in Messenger with the message already written, not just
   // an empty chat with the seller.
-  const messengerUrl = (() => {
+  //
+  // Conditional redirect: an 'admin' listing sends the buyer to the
+  // store's own Messenger (OFFICIAL_MESSENGER_URL); a 'user' listing
+  // sends the buyer straight to that seller's own Facebook/Messenger
+  // profile link (product.contact_messenger) instead, since the admin
+  // doesn't handle the sale for those. The `?text=` prefill only works
+  // on m.me/messenger.com links — a plain facebook.com profile URL
+  // doesn't support it, so it's appended only when applicable.
+  const buyUrl = (() => {
     let text;
     if (product.category === 'topup') {
       const amount = selectedVariant?.label || formatMNT(displayPrice);
@@ -70,7 +80,23 @@ export default function ProductModal({ product, onClose }) {
       const verb = product.category === 'rental' ? 'түрээслэмээр' : 'худалдаж авмаар';
       text = `Сайн байна уу? Би ${product.title} (ID: #${product.id}, Үнэ: ${formatMNT(displayPrice)})-ийг ${verb} байна.`;
     }
-    return `${OFFICIAL_MESSENGER_URL}?text=${encodeURIComponent(text)}`;
+
+    const targetUrl =
+      product.seller_type === 'user' && product.contact_messenger
+        ? product.contact_messenger
+        : OFFICIAL_MESSENGER_URL;
+
+    const supportsPrefill = /(^|\.)(m\.me|messenger\.com)/.test(
+      (() => {
+        try {
+          return new URL(targetUrl).hostname;
+        } catch {
+          return '';
+        }
+      })()
+    );
+
+    return supportsPrefill ? `${targetUrl}?text=${encodeURIComponent(text)}` : targetUrl;
   })();
 
   // A manual fallback for the Messenger auto-prefill above — that only
@@ -88,12 +114,14 @@ export default function ProductModal({ product, onClose }) {
     }
   };
 
+  const chatPartner = product.seller_type === 'user' ? 'зарагчтай' : 'админтай';
+
   const buyReminder =
     product.category === 'topup'
-      ? `Худалдаж авах дээр дарж админтай чатлахдаа хүссэн цэнэглэх хэмжээгээ (жишээ: 660 UC) болон энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`
+      ? `Худалдаж авах дээр дарж ${chatPartner} чатлахдаа хүссэн цэнэглэх хэмжээгээ (жишээ: 660 UC) болон энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`
       : product.category === 'rental'
-      ? `Худалдаж авах дээр дарж админтай чатлахдаа хүссэн түрээсийн хугацаагаа болон энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`
-      : `Худалдаж авах дээр дарж админтай чатлахдаа энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`;
+      ? `Худалдаж авах дээр дарж ${chatPartner} чатлахдаа хүссэн түрээсийн хугацаагаа болон энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`
+      : `Худалдаж авах дээр дарж ${chatPartner} чатлахдаа энэ барааны ID-г (#${product.id}) заавал бичиж илгээгээрэй.`;
 
   const handleShare = async () => {
     const url = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
@@ -148,7 +176,7 @@ export default function ProductModal({ product, onClose }) {
             the sm:w-1/2 desktop column) so the box never changes shape
             depending on which photo was uploaded. Crossfade + arrow/dot
             nav between slides. */}
-        <div className="relative aspect-[4/3] w-full shrink-0 bg-base-950 sm:w-1/2">
+        <div className="relative aspect-[4/3] w-full shrink-0 touch-pan-y bg-base-950 sm:w-1/2">
           <AnimatePresence mode="wait">
             <motion.img
               key={imgIndex}
@@ -158,6 +186,18 @@ export default function ProductModal({ product, onClose }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25, ease: EASE_SMOOTH }}
+              // Finger-swipe nav on mobile: drag snaps straight back to
+              // center (dragConstraints 0/0) while the fade/imgIndex swap
+              // does the actual sliding — this is just what reads the
+              // gesture. touch-pan-y above keeps vertical page scroll
+              // working through the image while x-drag is captured here.
+              drag={images.length > 1 ? 'x' : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.7}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -50) nextImg();
+                else if (info.offset.x > 50) prevImg();
+              }}
               className="h-full w-full object-contain"
             />
           </AnimatePresence>
@@ -427,10 +467,12 @@ export default function ProductModal({ product, onClose }) {
           </div>
 
           <div className="sticky bottom-0 mt-6 space-y-2 bg-base-800 pb-1 pt-2">
-            <p className="text-center text-[11px] leading-relaxed text-gray-500">{buyReminder}</p>
+            {product.seller_type !== 'user' && (
+              <p className="text-center text-[11px] leading-relaxed text-gray-500">{buyReminder}</p>
+            )}
             <GradientButton
               as="a"
-              href={messengerUrl}
+              href={buyUrl}
               target="_blank"
               rel="noreferrer"
               className="w-full"
