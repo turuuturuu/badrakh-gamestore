@@ -14,14 +14,15 @@ const PLACEHOLDER = 'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w
 /**
  * Full-screen-on-mobile / centered-on-desktop product detail dialog.
  * Buyers never create an account. The bottom "Худалдаж авах" button routes
- * conditionally by product.seller_type: 'admin' listings open the store's
- * own Messenger chat (OFFICIAL_MESSENGER_URL); 'user' listings open that
- * seller's own profile link (product.contact_messenger) directly instead.
- * The top "Эзэнтэй холбогдох" button — shown only when the admin set one
- * for this listing — mirrors that same seller link. Mount/unmount is
- * animated by the parent wrapping this component in <AnimatePresence>
- * (see Storefront.jsx) — the exit variants below only run because of that
- * wrapper.
+ * per `routesToOwnerProfile` (see below): an 'account' listing with an
+ * owner link set always opens that link (product.contact_messenger),
+ * regardless of admin/user seller_type; a 'topup'/'rental' listing only
+ * does that for a 'user' seller_type, and otherwise opens the store's own
+ * Messenger chat (OFFICIAL_MESSENGER_URL). The top "Эзэнтэй холбогдох"
+ * button — shown only when the admin set an owner link for this listing —
+ * mirrors that same link. Mount/unmount is animated by the parent
+ * wrapping this component in <AnimatePresence> (see Storefront.jsx) — the
+ * exit variants below only run because of that wrapper.
  */
 export default function ProductModal({ product, onClose }) {
   const [imgIndex, setImgIndex] = useState(0);
@@ -59,18 +60,24 @@ export default function ProductModal({ product, onClose }) {
     show(added ? 'Харьцуулах жагсаалтад нэмэгдлээ' : 'Харьцуулах жагсаалтаас хасагдлаа');
   };
 
+  // Which listings route the buyer straight to the owner's own profile
+  // link instead of the store's official Messenger:
+  //  - 'account' listings: ANY seller_type, as long as an owner link was
+  //    entered for this listing — an admin-owned account can still have
+  //    its own dedicated contact (e.g. a middleman), same as a user one.
+  //  - 'topup'/'rental' listings: only 'user' sellers — these are always
+  //    fulfilled by the store itself otherwise, so an 'admin' listing
+  //    here keeps going to OFFICIAL_MESSENGER_URL as before.
+  const routesToOwnerProfile =
+    Boolean(product.contact_messenger) &&
+    (product.category === 'account' || product.seller_type === 'user');
+
   // Pre-fills the Messenger composer with a ready-to-send message built
   // from this exact product/variant, via m.me's `?text=` param — the
   // buyer lands in Messenger with the message already written, not just
-  // an empty chat with the seller.
-  //
-  // Conditional redirect: an 'admin' listing sends the buyer to the
-  // store's own Messenger (OFFICIAL_MESSENGER_URL); a 'user' listing
-  // sends the buyer straight to that seller's own Facebook/Messenger
-  // profile link (product.contact_messenger) instead, since the admin
-  // doesn't handle the sale for those. The `?text=` prefill only works
-  // on m.me/messenger.com links — a plain facebook.com profile URL
-  // doesn't support it, so it's appended only when applicable.
+  // an empty chat with the seller. The `?text=` prefill only works on
+  // m.me/messenger.com links — a plain facebook.com profile URL doesn't
+  // support it, so it's appended only when applicable.
   const buyUrl = (() => {
     let text;
     if (product.category === 'topup') {
@@ -81,10 +88,7 @@ export default function ProductModal({ product, onClose }) {
       text = `Сайн байна уу? Би ${product.title} (ID: #${product.id}, Үнэ: ${formatMNT(displayPrice)})-ийг ${verb} байна.`;
     }
 
-    const targetUrl =
-      product.seller_type === 'user' && product.contact_messenger
-        ? product.contact_messenger
-        : OFFICIAL_MESSENGER_URL;
+    const targetUrl = routesToOwnerProfile ? product.contact_messenger : OFFICIAL_MESSENGER_URL;
 
     const supportsPrefill = /(^|\.)(m\.me|messenger\.com)/.test(
       (() => {
@@ -114,7 +118,7 @@ export default function ProductModal({ product, onClose }) {
     }
   };
 
-  const chatPartner = product.seller_type === 'user' ? 'зарагчтай' : 'админтай';
+  const chatPartner = routesToOwnerProfile ? 'зарагчтай' : 'админтай';
 
   const buyReminder =
     product.category === 'topup'
@@ -316,25 +320,18 @@ export default function ProductModal({ product, onClose }) {
           )}
 
           {product.category === 'account' && product.contact_messenger && (
-            product.seller_type === 'admin' ? (
-              <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-base-500 px-3.5 py-1.5 text-xs font-semibold text-gray-200">
-                <User className="h-3.5 w-3.5" strokeWidth={2} />
-                Admin account
-              </span>
-            ) : (
-              <motion.a
-                href={product.contact_messenger}
-                target="_blank"
-                rel="noreferrer"
-                whileHover={{ y: -1, borderColor: '#3b82f6' }}
-                whileTap={{ scale: 0.97 }}
-                transition={{ duration: 0.25, ease: EASE_SMOOTH }}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-base-500 px-3.5 py-1.5 text-xs font-semibold text-gray-200 transition-colors duration-300 ease-smooth hover:text-ink"
-              >
-                <User className="h-3.5 w-3.5" strokeWidth={2} />
-                Эзэнтэй холбогдох
-              </motion.a>
-            )
+            <motion.a
+              href={product.contact_messenger}
+              target="_blank"
+              rel="noreferrer"
+              whileHover={{ y: -1, borderColor: '#3b82f6' }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.25, ease: EASE_SMOOTH }}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-base-500 px-3.5 py-1.5 text-xs font-semibold text-gray-200 transition-colors duration-300 ease-smooth hover:text-ink"
+            >
+              <User className="h-3.5 w-3.5" strokeWidth={2} />
+              Эзэнтэй холбогдох
+            </motion.a>
           )}
 
           {((product.category === 'account' && product.game_slug !== 'cs2' && (
@@ -467,7 +464,7 @@ export default function ProductModal({ product, onClose }) {
           </div>
 
           <div className="sticky bottom-0 mt-6 space-y-2 bg-base-800 pb-1 pt-2">
-            {product.seller_type !== 'user' && (
+            {!routesToOwnerProfile && (
               <p className="text-center text-[11px] leading-relaxed text-gray-500">{buyReminder}</p>
             )}
             <GradientButton
