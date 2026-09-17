@@ -29,7 +29,16 @@ function AdminChip({ name, profileUrl }) {
         boxShadow: '0 0 20px 2px rgba(59, 130, 246, 0.45)',
         transition: { type: 'spring', stiffness: 500, damping: 18 },
       }}
-      className="flex w-full shrink-0 items-center gap-1.5 rounded-full border border-base-500 bg-base-950/40 px-3.5 py-1.5 text-xs font-semibold text-gray-200 backdrop-blur-sm transition-colors duration-300 ease-smooth hover:text-ink sm:text-sm"
+      // mb-2 lives on the item itself (not a parent flex `gap`) on purpose:
+      // the track below duplicates this list, and a parent `gap` only sits
+      // *between* items, so the doubled track ends up with one extra gap
+      // versus two independent copies stacked back to back — the 50% loop
+      // point then lands half a gap short of where copy two actually
+      // starts, and the whole track visibly jumps at that seam every
+      // cycle. Giving every item (including the last) the same trailing
+      // margin makes each item's slot height identical everywhere, so one
+      // copy's total height is always exactly half the doubled track.
+      className="mb-2 flex w-full shrink-0 items-center gap-1.5 rounded-full border border-base-500 bg-base-950/40 px-3.5 py-1.5 text-xs font-semibold text-gray-200 backdrop-blur-sm transition-colors duration-300 ease-smooth hover:text-ink sm:text-sm"
     >
       <motion.span
         aria-hidden
@@ -76,7 +85,7 @@ export default function AdminStrip() {
         <motion.div
           animate={{ y: ['-50%', '0%'] }}
           transition={{ duration: Math.max(admins.length, 1) * 3, ease: 'linear', repeat: Infinity }}
-          className="flex flex-col items-stretch gap-2"
+          className="flex flex-col items-stretch"
         >
           {track.map((admin, i) => (
             <AdminChip key={`${admin.id}-${i}`} name={admin.name} profileUrl={admin.profile_url} />
