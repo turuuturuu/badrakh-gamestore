@@ -9,7 +9,7 @@ const BASE_SELECT = `
   SELECT
     p.id, p.category, p.seller_type, p.title, p.description, p.price,
     p.status, p.is_hot, p.collection_count, p.bind_info,
-    p.account_level, p.max_rank, p.royale_pass, p.max_emblem, p.skin_count,
+    p.account_level, p.game_account_id, p.max_rank, p.royale_pass, p.max_emblem, p.skin_count,
     p.weapon_name, p.skin_name, p.wear_condition, p.float_value, p.stattrak_type, p.cs2_item_type,
     p.contact_messenger, p.created_at, p.updated_at,
     g.id   AS game_id, g.slug AS game_slug, g.name AS game_name,
@@ -90,7 +90,7 @@ async function findGameBySlug(slug) {
 async function create({
   gameId, category, sellerType, title, description, price, status, isHot,
   collectionCount, bindInfo,
-  accountLevel, maxRank, royalePass, maxEmblem, skinCount,
+  accountLevel, gameAccountId, maxRank, royalePass, maxEmblem, skinCount,
   weaponName, skinName, wearCondition, floatValue, stattrakType, cs2ItemType,
   contactMessenger, variants = [],
 }) {
@@ -101,12 +101,12 @@ async function create({
     const { rows } = await client.query(
       `INSERT INTO products
         (game_id, category, seller_type, title, description, price, status, is_hot, collection_count, bind_info,
-         account_level, max_rank, royale_pass, max_emblem, skin_count,
+         account_level, game_account_id, max_rank, royale_pass, max_emblem, skin_count,
          weapon_name, skin_name, wear_condition, float_value, stattrak_type, cs2_item_type, contact_messenger)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
        RETURNING id`,
       [gameId, category, sellerType, title, description, price, status, isHot, collectionCount, bindInfo,
-       accountLevel, maxRank, royalePass, maxEmblem, skinCount,
+       accountLevel, gameAccountId, maxRank, royalePass, maxEmblem, skinCount,
        weaponName, skinName, wearCondition, floatValue, stattrakType || 'none', cs2ItemType, contactMessenger]
     );
     const productId = rows[0].id;
@@ -144,6 +144,7 @@ async function update(id, fields) {
     collectionCount: 'collection_count',
     bindInfo: 'bind_info',
     accountLevel: 'account_level',
+    gameAccountId: 'game_account_id',
     maxRank: 'max_rank',
     royalePass: 'royale_pass',
     maxEmblem: 'max_emblem',

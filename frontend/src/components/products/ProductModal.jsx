@@ -118,6 +118,19 @@ export default function ProductModal({ product, onClose }) {
     }
   };
 
+  // Same copy-to-clipboard as the barааны ID pill above, but for the
+  // account's own in-game ID/UID (product.game_account_id) — the buyer
+  // needs this to actually verify/receive the account, so it should be
+  // just as easy to copy as the listing ID.
+  const handleCopyAccountId = async () => {
+    try {
+      await navigator.clipboard.writeText(String(product.game_account_id));
+      show('Аккаунтын ID хуулагдлаа');
+    } catch {
+      // clipboard permission denied or unsupported — nothing to do
+    }
+  };
+
   const chatPartner = routesToOwnerProfile ? 'зарагчтай' : 'админтай';
 
   const buyReminder =
@@ -337,6 +350,7 @@ export default function ProductModal({ product, onClose }) {
           {((product.category === 'account' && product.game_slug !== 'cs2' && (
               product.collection_count != null ||
               product.bind_info ||
+              product.game_account_id ||
               product.account_level != null ||
               product.max_rank ||
               product.royale_pass ||
@@ -348,15 +362,32 @@ export default function ProductModal({ product, onClose }) {
             product.wear_condition ||
             product.float_value != null) && (
             <div className="mt-4 grid grid-cols-2 gap-3">
-              {/* Collection/Bind are PUBG/MLBB account-only concepts —
-                  never relevant for a CS2 skin, and never relevant for a
-                  topup/rental listing even if the row happens to hold a
-                  stray 0/null value from before its category changed. */}
+              {/* Collection/Bind/Account ID are PUBG/MLBB account-only
+                  concepts — never relevant for a CS2 skin, and never
+                  relevant for a topup/rental listing even if the row
+                  happens to hold a stray 0/null value from before its
+                  category changed. */}
               {product.category === 'account' && product.game_slug !== 'cs2' && product.collection_count != null && (
                 <div className="rounded-xl bg-base-700 p-3 text-center">
                   <p className="text-[11px] uppercase text-gray-500">Collection</p>
                   <p className="font-bold text-ink">{product.collection_count}</p>
                 </div>
+              )}
+              {/* Same click-to-copy design as the barааны ID pill at the
+                  top of the card, just relocated next to Collection since
+                  this is the account's own in-game ID, not the listing's. */}
+              {product.category === 'account' && product.game_slug !== 'cs2' && product.game_account_id && (
+                <button
+                  type="button"
+                  onClick={handleCopyAccountId}
+                  className="rounded-xl bg-base-700 p-3 text-center transition-colors duration-300 ease-smooth hover:bg-base-600"
+                >
+                  <p className="text-[11px] uppercase text-gray-500">Account ID</p>
+                  <p className="inline-flex items-center gap-1.5 font-bold text-ink">
+                    {product.game_account_id}
+                    <Copy className="h-3 w-3 shrink-0 text-gray-400" strokeWidth={2} />
+                  </p>
+                </button>
               )}
               {product.category === 'account' && product.game_slug !== 'cs2' && product.bind_info && (
                 <div className="rounded-xl bg-base-700 p-3 text-center">

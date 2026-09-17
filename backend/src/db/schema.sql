@@ -81,10 +81,11 @@ CREATE TABLE IF NOT EXISTS products (
   bind_info          VARCHAR(64),    -- e.g. "elink numb" — what the account is bound to
 
   -- PUBG Mobile / MLBB account-specific optional metadata (NULL for every
-  -- other game and for topup/rental rows). account_level is shared by
-  -- both games; the rest are game-specific (see ProductForm's PUBG_FIELDS
-  -- / MLBB_FIELDS split).
+  -- other game and for topup/rental rows). account_level and
+  -- game_account_id are shared by both games; the rest are game-specific
+  -- (see ProductForm's PUBG_FIELDS / MLBB_FIELDS split).
   account_level      INTEGER,        -- in-game account level, both games
+  game_account_id    VARCHAR(64),    -- the account's in-game ID/UID (PUBG/MLBB only) — shown copyable on the product card
   max_rank           VARCHAR(32),    -- PUBG only — "Ace", "Conqueror" ...
   royale_pass        VARCHAR(64),    -- PUBG only — Royale Pass status, free text
   max_emblem         VARCHAR(32),    -- MLBB only — "Mythic", "Legend V" ...
@@ -120,6 +121,7 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS max_rank       VARCHAR(32);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS royale_pass    VARCHAR(64);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS max_emblem     VARCHAR(32);
 ALTER TABLE products ADD COLUMN IF NOT EXISTS skin_count     VARCHAR(120);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS game_account_id VARCHAR(64);
 
 CREATE INDEX IF NOT EXISTS idx_products_game_category ON products (game_id, category);
 CREATE INDEX IF NOT EXISTS idx_products_seller_type   ON products (seller_type);

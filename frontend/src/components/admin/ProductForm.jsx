@@ -53,6 +53,7 @@ export default function ProductForm({ initial, onSubmit, onCancel, submitting })
     collectionCount: initial?.collection_count ?? '',
     bindInfo: initial?.bind_info || '',
     accountLevel: initial?.account_level ?? '',
+    gameAccountId: initial?.game_account_id || '',
     maxRank: initial?.max_rank || '',
     royalePass: initial?.royale_pass || '',
     maxEmblem: initial?.max_emblem || '',
@@ -340,7 +341,7 @@ export default function ProductForm({ initial, onSubmit, onCancel, submitting })
               transition={{ duration: 0.3, ease: EASE_SMOOTH }}
               className="space-y-4"
             >
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                   <label className={labelClass}>Collection тоо</label>
                   <input type="number" min="0" value={form.collectionCount} onChange={update('collectionCount')} className={inputClass} />
@@ -348,6 +349,17 @@ export default function ProductForm({ initial, onSubmit, onCancel, submitting })
                 <div>
                   <label className={labelClass}>Bind мэдээлэл</label>
                   <input value={form.bindInfo} onChange={update('bindInfo')} className={inputClass} placeholder="elink numb / facebook / ..." />
+                </div>
+                <div>
+                  {/* Shown copyable right alongside Collection on the
+                      product card — see ProductModal.jsx. */}
+                  <label className={labelClass}>Аккаунтын ID</label>
+                  <input
+                    value={form.gameAccountId}
+                    onChange={update('gameAccountId')}
+                    className={inputClass}
+                    placeholder="Жишээ: 5123456789"
+                  />
                 </div>
               </div>
 

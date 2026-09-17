@@ -45,9 +45,10 @@ function parseCS2Fields(body) {
 // "wrong" game's field is harmless (the modal only ever displays the
 // fields relevant to that product's own game_slug).
 function parseAccountFields(body) {
-  const { accountLevel, maxRank, royalePass, maxEmblem, skinCount } = body;
+  const { accountLevel, gameAccountId, maxRank, royalePass, maxEmblem, skinCount } = body;
   return {
     accountLevel: accountLevel !== undefined && accountLevel !== '' ? Number(accountLevel) : null,
+    gameAccountId: gameAccountId || null,
     maxRank: maxRank || null,
     royalePass: royalePass || null,
     maxEmblem: maxEmblem || null,
