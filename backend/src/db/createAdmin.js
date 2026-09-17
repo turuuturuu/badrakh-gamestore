@@ -5,8 +5,8 @@ const { query, pool } = require('../config/db');
 
 async function main() {
   const [, , usernameArg, passwordArg] = process.argv;
-  const username = usernameArg || 'admin';
-  const password = passwordArg || 'admin123';
+  const username = usernameArg || 'Badrahweb';
+  const password = passwordArg || 'Badrah123';
 
   const passwordHash = await bcrypt.hash(password, 10);
 

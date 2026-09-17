@@ -237,12 +237,12 @@ CREATE INDEX IF NOT EXISTS idx_faqs_sort ON faqs (sort_order);
 -- NOTE on the admin account: it is intentionally NOT seeded here.
 --
 -- A bcrypt hash is salted and different every time it's generated, so
--- there's no way to hand-write a "password: admin123" literal into this
+-- there's no way to hand-write a "password: Badrah123" literal into this
 -- file that can be eyeballed as correct — the only trustworthy way to
 -- get one is to actually run bcrypt. Create the first admin with:
 --
 --   cd backend
---   npm run create-admin                       # admin / admin123
+--   npm run create-admin                       # Badrahweb / Badrah123
 --   npm run create-admin -- myname myPassword1  # custom username/password
 --
 -- (see src/db/createAdmin.js — it hashes with the project's own

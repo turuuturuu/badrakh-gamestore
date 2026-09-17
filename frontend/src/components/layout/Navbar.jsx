@@ -34,9 +34,11 @@ export default function Navbar() {
     <header className="sticky top-0 z-40 border-b border-base-700 bg-base-950/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
         <Link to="/" className="group flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-logo-gradient text-lg font-extrabold text-white shadow-glow transition-transform duration-300 ease-smooth animate-glow-pulse group-hover:scale-105">
-            B
-          </div>
+          <img
+            src="/logo.jpg"
+            alt="Badrakh Gamestore"
+            className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-glow transition-transform duration-300 ease-smooth animate-glow-pulse group-hover:scale-105"
+          />
           <div className="leading-tight">
             <p className="text-sm font-bold text-ink transition-colors duration-300 ease-smooth sm:text-base group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-brand-gradient">
               Badrakh Gamestore
